@@ -1,0 +1,21 @@
+name: Create Release Notes
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  generate_release_notes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: create Release Notes
+        run: |
+          gh release ${{github.ref_name}} --generate-notes
