@@ -1,0 +1,53 @@
+name: Create Release branch and PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Release version (e.g., 1.0.0)"
+        required: true
+
+jobs:
+  create_release_branch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up npm
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Update version
+        run: |
+          cd function-a
+          npm version ${{ github.event.inputs.release_version }} --no-git-tag-version
+          cd ..
+          cd function-b
+          npm version ${{ github.event.inputs.release_version }} --no-git-tag-version
+          cd ..
+          cd function-c
+          npm version ${{ github.event.inputs.release_version }} --no-git-tag-version
+          cd ..
+
+      - name: Create release pull request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_VERSION=${{ github.event.inputs.release_version }}
+          RELEASE_BRANCH="release/v${RELEASE_VERSION}"
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $RELEASE_BRANCH
+          git add -A
+          git commit -m "v${RELEASE_VERSION}リリース"
+          git push origin $RELEASE_BRANCH
+
+          gh pr create --title "Release v${RELEASE_VERSION}" --body "This PR prepares the release v${RELEASE_VERSION}}." --head ${RELEASE_BRANCH} --base main
