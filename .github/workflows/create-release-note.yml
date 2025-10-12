@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_run: ${{ steps.check.outputs.should_run }}
-      version: ${{ steps.check.outputs.version }}
+      tag_name: ${{ steps.check.outputs.tag_name }}
     steps:
       - name: Check should run
         id: check
@@ -20,7 +20,8 @@ jobs:
                 "${{ startsWith(github.head_ref, 'release/') }}" == "true" && \
                 "${{ github.base_ref }}" == "main" ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
-            echo "version=${{ github.head_ref | replace('release/', 'v') }}" >> $GITHUB_OUTPUT
+            VERSION=echo ${{ github.head_ref }} | cut -d '/' -f 2
+            echo "tag_name=v${VERSION}" >> $GITHUB_OUTPUT
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
           fi
@@ -35,7 +36,7 @@ jobs:
     steps:
       - name: create Release Notes
         run: |
-          gh release create ${{ needs.check-should-run.outputs.version }} \
+          gh release create ${{ needs.check-should-run.outputs.tag_name }} \
             --base main \
             --generate-notes \
             --draft \
