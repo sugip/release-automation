@@ -32,7 +32,8 @@ jobs:
     if: needs.check-should-run.outputs.should_run == 'true'
     permissions:
       contents: write
-
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: create Release Notes
         run: |
