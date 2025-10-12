@@ -1,21 +1,42 @@
 name: Create Release Notes
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - main
 
 jobs:
+  check-should-run:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - name: Check should run
+        id: check
+        run: |
+          if [[ "${{ github.event.pull_request.merged }}" == "true" && \
+                "${{ startsWith(github.head_ref, 'release/') }}" == "true" && \
+                "${{ github.base_ref }}" == "main" ]]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "version=${{ github.head_ref | replace('release/', 'v') }}" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          fi
+
   generate_release_notes:
     runs-on: ubuntu-latest
+    needs: check-should-run
+    if: needs.check-should-run.outputs.should_run == 'true'
     permissions:
       contents: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
       - name: create Release Notes
         run: |
-          gh release ${{github.ref_name}} --generate-notes
+          gh release create ${{ needs.check-should-run.outputs.version }} \
+            --base main \
+            --generate-notes \
+            --draft \
+            --latest

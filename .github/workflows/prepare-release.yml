@@ -16,7 +16,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Set up npm
         uses: actions/setup-node@v5
@@ -50,4 +52,7 @@ jobs:
           git commit -m "v${RELEASE_VERSION}リリース"
           git push origin $RELEASE_BRANCH
 
-          gh pr create --title "Release v${RELEASE_VERSION}" --body "This PR prepares the release v${RELEASE_VERSION}." --head ${RELEASE_BRANCH} --base main
+          gh pr create --title "Release v${RELEASE_VERSION}" \
+            --body "This PR prepares the release v${RELEASE_VERSION}." \
+            --head ${RELEASE_BRANCH} \
+            --base main
