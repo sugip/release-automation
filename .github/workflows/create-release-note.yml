@@ -20,7 +20,7 @@ jobs:
                 "${{ startsWith(github.head_ref, 'release/') }}" == "true" && \
                 "${{ github.base_ref }}" == "main" ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
-            VERSION=echo ${{ github.head_ref }} | cut -d '/' -f 2
+            VERSION=$(echo ${{ github.head_ref }} | cut -d '/' -f 2)
             echo "tag_name=v${VERSION}" >> $GITHUB_OUTPUT
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
