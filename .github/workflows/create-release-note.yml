@@ -37,7 +37,7 @@ jobs:
       - name: create Release Notes
         run: |
           gh release create ${{ needs.check-should-run.outputs.tag_name }} \
-            --base main \
+            --target main \
             --generate-notes \
             --draft \
             --latest
