@@ -1,0 +1,13 @@
+name: Dummy Workflow
+
+on:
+  release:
+    types:
+      - released
+
+jobs:
+  dummy-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dummy step
+        run: echo "Dummy step"
