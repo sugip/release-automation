@@ -9,15 +9,18 @@ on:
 jobs:
   check-should-run:
     runs-on: ubuntu-latest
-    outputs:
-      should_run: ${{ steps.check.outputs.should_run }}
-      tag_name: ${{ steps.check.outputs.tag_name }}
+    permissions:
+      contents: write
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - name: Check should run
-        id: check
+        id: check-should-run
         run: |
           if [[ "${{ github.event.pull_request.merged }}" == "true" && \
-                "${{ startsWith(github.head_ref, 'release/') }}" == "true" && \
+                "${{ startsWith(github.head_ref, 'release/') || startsWith(github.head_ref, 'hotfix/') }}" == "true" && \
                 "${{ github.base_ref }}" == "main" ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
             VERSION=$(echo ${{ github.head_ref }} | cut -d '/' -f 2)
@@ -25,24 +28,15 @@ jobs:
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
           fi
-
-  generate_release_notes:
-    runs-on: ubuntu-latest
-    needs: check-should-run
-    if: needs.check-should-run.outputs.should_run == 'true'
-    permissions:
-      contents: write
-    env:
-      GH_TOKEN: ${{ github.token }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - name: create Release Notes
+      - name: create Release Note Draft
+        if: steps.check-should-run.outputs.should_run == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ needs.check-should-run.outputs.tag_name }} \
+          VERSION_TAG=${{ steps.check-should-run.outputs.tag_name }}
+          gh release create ${VERSION_TAG} \
             --target main \
+            --title "v${VERSION_TAG}リリース" \
             --generate-notes \
             --draft \
             --latest
