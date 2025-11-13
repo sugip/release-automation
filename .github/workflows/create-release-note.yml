@@ -21,9 +21,11 @@ jobs:
         id: check
         run: |
           if [[ "${{ github.event.pull_request.merged }}" == "true" && \
+                # release/ もしくは hotfix/ ブランチからのPRである場合のみリリースノートを作成
                 "${{ startsWith(github.head_ref, 'release/') || startsWith(github.head_ref, 'hotfix/') }}" == "true" && \
                 "${{ github.base_ref }}" == "main" ]]; then
             echo "should_create_release_note=true" >> $GITHUB_OUTPUT
+            # / 以降のバージョン部分を抽出
             VERSION=$(echo ${{ github.head_ref }} | cut -d '/' -f 2)
             echo "tag_name=${VERSION}" >> $GITHUB_OUTPUT
           else
